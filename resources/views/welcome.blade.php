@@ -303,6 +303,12 @@
 
 <script>
 (function () {
+  // Resolve the API base relative to how this page itself was reached, so it
+  // works whether served at the domain root (`php artisan serve`) or under a
+  // subpath via a local vhost (e.g. `.../public/index.php`).
+  const path = window.location.pathname;
+  const API_BASE = (path.endsWith('index.php') ? path : path.replace(/\/$/, '')) + '/api';
+
   const listings = document.getElementById('listings');
   const jobCount = document.getElementById('job-count');
   const searchForm = document.getElementById('search-form');
@@ -337,7 +343,7 @@
     listings.innerHTML = '<p class="loading">Fetching the latest wanted ads&hellip;</p>';
     try {
       const query = new URLSearchParams(params).toString();
-      const res = await fetch('/api/jobs' + (query ? `?${query}` : ''));
+      const res = await fetch(`${API_BASE}/jobs` + (query ? `?${query}` : ''));
       const body = await res.json();
       const jobs = body.data || [];
       jobCount.textContent = `${body.meta?.total ?? jobs.length} positions listed`;
@@ -369,7 +375,7 @@
     jobStatus.textContent = 'Sending to the printer&hellip;';
     jobStatus.className = 'status';
     try {
-      const res = await fetch('/api/jobs', {
+      const res = await fetch(`${API_BASE}/jobs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify(payload),
@@ -391,7 +397,7 @@
     subStatus.textContent = 'Registering your subscription&hellip;';
     subStatus.className = 'status';
     try {
-      const res = await fetch('/api/subscriptions', {
+      const res = await fetch(`${API_BASE}/subscriptions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({ email: raw.email, search_pattern: raw.search_pattern || null }),

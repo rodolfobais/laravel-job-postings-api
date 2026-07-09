@@ -1,0 +1,206 @@
+openapi: 3.0.3
+info:
+  title: Jobberwocky API
+  description: >
+    Job posting, search, external-source aggregation, and email alert
+    subscriptions. No authentication (by design — see README).
+  version: "1.0"
+servers:
+  - url: http://localhost:8000/api
+    description: Local (php artisan serve)
+
+paths:
+  /jobs:
+    get:
+      summary: Search jobs
+      description: >
+        Combines internal jobs with jobberwocky-extra-source-v2 results
+        (unless source=internal). If the extra source is unreachable, it is
+        silently omitted — internal results are still returned.
+      parameters:
+        - name: title
+          in: query
+          schema: { type: string }
+          description: Case-insensitive partial match on title, description, or skills.
+        - name: location
+          in: query
+          schema: { type: string }
+          description: Case-insensitive partial match. For external jobs, this matches the source country.
+        - name: min_salary
+          in: query
+          schema: { type: integer }
+        - name: max_salary
+          in: query
+          schema: { type: integer }
+        - name: skills
+          in: query
+          schema: { type: string }
+          description: Comma-separated. Matches if the job has at least one overlapping skill.
+        - name: source
+          in: query
+          schema: { type: string, enum: [all, internal, external], default: all }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: per_page
+          in: query
+          schema: { type: integer, default: 20 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/Job" }
+                  meta: { $ref: "#/components/schemas/PageMeta" }
+              example:
+                data:
+                  - id: "6770cb3b-06d5-401b-b147-fff2a052bdf5"
+                    title: "Backend Developer"
+                    company: "Avature"
+                    location: "Remote"
+                    salary: { min: 50000, max: 70000, currency: "USD" }
+                    description: "Great role"
+                    skills: ["PHP", "Laravel"]
+                    postedAt: "2026-07-08T18:12:29+00:00"
+                    source: "internal"
+                    externalId: null
+                meta: { total: 1, page: 1, per_page: 20, total_pages: 1 }
+
+    post:
+      summary: Post a new job
+      description: >
+        On success, notifies (by email) every subscription whose search
+        pattern matches the new job. A notification failure never affects
+        the 201 response.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/StoreJobRequest" }
+            example:
+              title: "Senior Laravel Developer"
+              company: "Avature"
+              location: "Remote"
+              salary_min: 60000
+              salary_max: 90000
+              currency: "USD"
+              description: "Looking for a Laravel expert."
+              skills: ["php", "laravel", "mysql"]
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/Job" }
+        "422":
+          description: Validation error
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ValidationError" }
+        "429":
+          description: Too many requests (throttled at 10/min)
+
+  /subscriptions:
+    post:
+      summary: Subscribe to job alerts
+      description: >
+        Optionally filtered by a search_pattern; matched the same way as
+        the `title` search filter (title, description, or skills).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/StoreSubscriptionRequest" }
+            example:
+              email: "rodolfo@example.com"
+              search_pattern: "laravel"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string, example: "Subscription created successfully" }
+                  data:
+                    type: object
+                    properties:
+                      id: { type: string, format: uuid }
+                      email: { type: string, format: email }
+                      searchPattern: { type: string, nullable: true }
+        "422":
+          description: Validation error
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ValidationError" }
+        "429":
+          description: Too many requests (throttled at 10/min)
+
+components:
+  schemas:
+    Job:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        company: { type: string, nullable: true }
+        location: { type: string, nullable: true }
+        salary:
+          type: object
+          nullable: true
+          properties:
+            min: { type: integer, nullable: true }
+            max: { type: integer, nullable: true }
+            currency: { type: string, nullable: true }
+        description: { type: string, nullable: true }
+        skills: { type: array, items: { type: string } }
+        postedAt: { type: string, format: date-time }
+        source: { type: string, enum: [internal, external] }
+        externalId: { type: string, nullable: true }
+
+    PageMeta:
+      type: object
+      properties:
+        total: { type: integer }
+        page: { type: integer }
+        per_page: { type: integer }
+        total_pages: { type: integer }
+
+    StoreJobRequest:
+      type: object
+      required: [title, company, description]
+      properties:
+        title: { type: string, maxLength: 255 }
+        company: { type: string, maxLength: 255 }
+        location: { type: string, maxLength: 255, nullable: true }
+        salary_min: { type: integer, minimum: 0, nullable: true }
+        salary_max: { type: integer, minimum: 0, nullable: true }
+        currency: { type: string, minLength: 3, maxLength: 3, nullable: true }
+        description: { type: string }
+        skills: { type: array, items: { type: string } }
+
+    StoreSubscriptionRequest:
+      type: object
+      required: [email]
+      properties:
+        email: { type: string, format: email }
+        search_pattern: { type: string, nullable: true }
+
+    ValidationError:
+      type: object
+      properties:
+        message: { type: string }
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items: { type: string }

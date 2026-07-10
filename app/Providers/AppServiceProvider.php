@@ -41,7 +41,14 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(JobRepository::class, function ($app) {
             return new CompositeJobRepository(
                 $app->make(EloquentJobRepository::class),
-                $app->make(ExtraSourceAdapter::class)
+                [
+                    $app->make(ExtraSourceAdapter::class),
+                    // To add another external source: bind its own Client +
+                    // Mapper + Adapter (implementing ExternalJobSource) above,
+                    // then just append it to this array — nothing else in this
+                    // method, or anywhere outside App\Infrastructure\External,
+                    // needs to change.
+                ]
             );
         });
     }

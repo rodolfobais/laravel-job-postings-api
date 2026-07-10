@@ -12,13 +12,16 @@ class CompositeJobRepository implements JobRepository
 {
     /** @var JobRepository */
     private $internalRepository;
-    /** @var ExternalJobSource */
-    private $externalSource;
+    /** @var ExternalJobSource[] */
+    private $externalSources;
 
-    public function __construct(JobRepository $internalRepository, ExternalJobSource $externalSource)
+    /**
+     * @param ExternalJobSource[] $externalSources
+     */
+    public function __construct(JobRepository $internalRepository, array $externalSources)
     {
         $this->internalRepository = $internalRepository;
-        $this->externalSource = $externalSource;
+        $this->externalSources = $externalSources;
     }
 
     public function save(Job $job): void
@@ -39,14 +42,12 @@ class CompositeJobRepository implements JobRepository
             return $internalJobs;
         }
 
-        $externalJobs = $this->externalSource->fetchJobs();
-        $filteredExternal = array_filter($externalJobs, fn(Job $job) => $criteria->matches($job));
+        $filteredExternal = array_filter($this->fetchAllExternal(), fn(Job $job) => $criteria->matches($job));
 
         $allJobs = array_merge($internalJobs, $filteredExternal);
 
         usort($allJobs, fn(Job $a, Job $b) => $b->postedAt <=> $a->postedAt);
 
-        $total = count($allJobs);
         $offset = ($criteria->page - 1) * $criteria->perPage;
 
         return array_slice($allJobs, $offset, $criteria->perPage);
@@ -60,9 +61,27 @@ class CompositeJobRepository implements JobRepository
             return $internal;
         }
 
-        $external = $this->externalSource->fetchJobs();
-        $filtered = array_filter($external, fn(Job $job) => $criteria->matches($job));
+        $filtered = array_filter($this->fetchAllExternal(), fn(Job $job) => $criteria->matches($job));
 
         return $internal + count($filtered);
+    }
+
+    /**
+     * Fetches every configured external source and merges the results.
+     * Adding a new source requires no change here — see AppServiceProvider
+     * for where new ExternalJobSource implementations get appended to the
+     * array injected into this class.
+     *
+     * @return Job[]
+     */
+    private function fetchAllExternal(): array
+    {
+        $jobs = [];
+
+        foreach ($this->externalSources as $source) {
+            $jobs = array_merge($jobs, $source->fetchJobs());
+        }
+
+        return $jobs;
     }
 }

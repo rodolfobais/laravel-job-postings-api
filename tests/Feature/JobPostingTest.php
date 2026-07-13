@@ -47,6 +47,17 @@ class JobPostingTest extends TestCase
         $response->assertJsonValidationErrors(['title', 'description']);
     }
 
+    public function test_validation_errors_are_json_even_without_an_accept_header(): void
+    {
+        // A plain POST (no Accept: application/json) would normally make
+        // Laravel redirect (302) with the errors in the session. Under /api
+        // that must still be a 422 JSON response — see Handler::shouldReturnJson.
+        $response = $this->post('/api/jobs', ['company' => 'Avature']);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['title', 'description']);
+    }
+
     public function test_it_notifies_matching_subscribers_when_a_job_is_created(): void
     {
         Mail::fake();

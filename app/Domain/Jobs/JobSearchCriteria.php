@@ -61,7 +61,7 @@ final class JobSearchCriteria
             return false;
         }
 
-        if ($this->skills && $job->skills) {
+        if ($this->skills) {
             $requiredSkills = array_map('trim', explode(',', strtolower($this->skills)));
             $jobSkills = array_map('strtolower', $job->skills);
             $matches = array_intersect($requiredSkills, $jobSkills);

@@ -36,6 +36,15 @@ class JobSearchCriteriaTest extends TestCase
         $this->assertFalse((new JobSearchCriteria(null, null, null, null, 'python,go'))->matches($job));
     }
 
+    public function test_a_job_with_no_skills_never_matches_a_skills_filter(): void
+    {
+        $job = $this->makeJob(['skills' => []]);
+
+        $this->assertFalse((new JobSearchCriteria(null, null, null, null, 'python,docker'))->matches($job));
+        // ...but with no skills filter at all, it still matches.
+        $this->assertTrue((new JobSearchCriteria())->matches($job));
+    }
+
     public function test_matches_by_source(): void
     {
         $job = $this->makeJob(['source' => 'external']);

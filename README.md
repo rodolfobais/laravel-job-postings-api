@@ -52,3 +52,7 @@ php artisan test
 ```
 
 36 tests, no external dependencies, runs in under a second.
+
+## Note
+
+The core implementation (job posting/search, external source aggregation, alerts, tests) is my own work. Some cosmetic edits after the fact — README wording, renaming a placeholder company name in test fixtures — were done with AI assistance.

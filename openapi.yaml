@@ -61,7 +61,7 @@ paths:
                 data:
                   - id: "6770cb3b-06d5-401b-b147-fff2a052bdf5"
                     title: "Backend Developer"
-                    company: "Avature"
+                    company: "Acme Corp"
                     location: "Remote"
                     salary: { min: 50000, max: 70000, currency: "USD" }
                     description: "Great role"
@@ -84,7 +84,7 @@ paths:
             schema: { $ref: "#/components/schemas/StoreJobRequest" }
             example:
               title: "Senior Laravel Developer"
-              company: "Avature"
+              company: "Acme Corp"
               location: "Remote"
               salary_min: 60000
               salary_max: 90000

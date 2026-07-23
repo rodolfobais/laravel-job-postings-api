@@ -22,7 +22,7 @@ class JobSearchTest extends TestCase
 
         $this->postJson('/api/jobs', [
             'title' => 'Backend Developer',
-            'company' => 'Avature',
+            'company' => 'Acme Corp',
             'description' => 'Internal role',
         ])->assertCreated();
 
@@ -46,7 +46,7 @@ class JobSearchTest extends TestCase
 
         $this->postJson('/api/jobs', [
             'title' => 'Backend Developer',
-            'company' => 'Avature',
+            'company' => 'Acme Corp',
             'description' => 'Internal role',
         ])->assertCreated();
 
@@ -63,12 +63,12 @@ class JobSearchTest extends TestCase
 
         $this->postJson('/api/jobs', [
             'title' => 'Backend Developer',
-            'company' => 'Avature',
+            'company' => 'Acme Corp',
             'description' => 'desc',
         ])->assertCreated();
         $this->postJson('/api/jobs', [
             'title' => 'Frontend Developer',
-            'company' => 'Avature',
+            'company' => 'Acme Corp',
             'description' => 'desc',
         ])->assertCreated();
 
@@ -86,7 +86,7 @@ class JobSearchTest extends TestCase
         for ($i = 1; $i <= 3; $i++) {
             $this->postJson('/api/jobs', [
                 'title' => "Developer {$i}",
-                'company' => 'Avature',
+                'company' => 'Acme Corp',
                 'description' => 'desc',
             ])->assertCreated();
         }

@@ -25,7 +25,7 @@ class JobPostingTest extends TestCase
 
         $response = $this->postJson('/api/jobs', [
             'title' => 'Backend Developer',
-            'company' => 'Avature',
+            'company' => 'Acme Corp',
             'location' => 'Remote',
             'salary_min' => 50000,
             'salary_max' => 70000,
@@ -36,12 +36,12 @@ class JobPostingTest extends TestCase
 
         $response->assertCreated();
         $response->assertJsonPath('data.title', 'Backend Developer');
-        $this->assertDatabaseHas('jobs', ['title' => 'Backend Developer', 'company' => 'Avature']);
+        $this->assertDatabaseHas('jobs', ['title' => 'Backend Developer', 'company' => 'Acme Corp']);
     }
 
     public function test_it_rejects_a_job_missing_required_fields(): void
     {
-        $response = $this->postJson('/api/jobs', ['company' => 'Avature']);
+        $response = $this->postJson('/api/jobs', ['company' => 'Acme Corp']);
 
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['title', 'description']);
@@ -52,7 +52,7 @@ class JobPostingTest extends TestCase
         // A plain POST (no Accept: application/json) would normally make
         // Laravel redirect (302) with the errors in the session. Under /api
         // that must still be a 422 JSON response — see Handler::shouldReturnJson.
-        $response = $this->post('/api/jobs', ['company' => 'Avature']);
+        $response = $this->post('/api/jobs', ['company' => 'Acme Corp']);
 
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['title', 'description']);
@@ -69,7 +69,7 @@ class JobPostingTest extends TestCase
 
         $this->postJson('/api/jobs', [
             'title' => 'Senior Laravel Developer',
-            'company' => 'Avature',
+            'company' => 'Acme Corp',
             'description' => 'Laravel role',
         ])->assertCreated();
 
@@ -89,7 +89,7 @@ class JobPostingTest extends TestCase
 
         $this->postJson('/api/jobs', [
             'title' => 'Senior Laravel Developer',
-            'company' => 'Avature',
+            'company' => 'Acme Corp',
             'description' => 'Laravel role',
         ])->assertCreated();
 

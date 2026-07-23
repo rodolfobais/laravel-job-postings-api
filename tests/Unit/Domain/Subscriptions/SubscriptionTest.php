@@ -42,7 +42,7 @@ class SubscriptionTest extends TestCase
             'id' => 'job-1',
             'title' => 'Backend Developer',
             'postedAt' => new DateTimeImmutable(),
-            'company' => 'Avature',
+            'company' => 'Acme Corp',
             'location' => 'Remote',
             'salaryMin' => null,
             'salaryMax' => null,

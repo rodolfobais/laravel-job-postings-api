@@ -14,7 +14,7 @@ class CreateJobHandlerTest extends MockeryTestCase
 {
     public function test_saves_and_returns_a_job_built_from_the_command(): void
     {
-        $dto = new JobDTO('Backend Developer', 'Avature', 'Remote', 50000, 70000, 'USD', 'Great role', ['PHP']);
+        $dto = new JobDTO('Backend Developer', 'Acme Corp', 'Remote', 50000, 70000, 'USD', 'Great role', ['PHP']);
         $command = new CreateJobCommand($dto);
 
         $repository = Mockery::mock(JobRepository::class);
@@ -22,7 +22,7 @@ class CreateJobHandlerTest extends MockeryTestCase
             ->once()
             ->with(Mockery::on(function (Job $job) {
                 return $job->title === 'Backend Developer'
-                    && $job->company === 'Avature'
+                    && $job->company === 'Acme Corp'
                     && $job->source === 'internal'
                     && $job->skills === ['PHP'];
             }));
